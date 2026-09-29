@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ザブングル家の献立</title>
+  <meta name="theme-color" content="#e8773a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="献立">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1 id="page-title">今日の提案</h1>
+  </header>
+
+  <main>
+    <!-- Suggestion tab -->
+    <section id="tab-suggest" class="tab active">
+      <div class="card theme-card">
+        <label class="date-row">
+          <span>日付</span>
+          <input type="date" id="suggest-date">
+        </label>
+        <div id="theme"></div>
+        <div id="balance" class="balance"></div>
+      </div>
+
+      <h2>主菜</h2>
+      <div id="list-main"></div>
+      <h2>副菜・汁物</h2>
+      <div id="list-side"></div>
+      <h2>ごはん（味付き）</h2>
+      <div id="list-rice"></div>
+      <h2>レシピ帳から</h2>
+      <div id="list-book"></div>
+
+      <button class="btn primary wide" id="btn-reshuffle">🔄 別の案を出す</button>
+    </section>
+
+    <!-- Recipe book tab -->
+    <section id="tab-book" class="tab">
+      <div class="filters">
+        <input type="search" id="book-search" placeholder="名前・メモで検索">
+        <select id="book-filter-group">
+          <option value="">分類: すべて</option>
+        </select>
+        <select id="book-filter-reaction">
+          <option value="">反応: すべて</option>
+          <option value="◎">◎</option>
+          <option value="○">○</option>
+          <option value="△">△</option>
+        </select>
+      </div>
+      <button class="btn primary wide" id="btn-add-book">＋ レシピを登録</button>
+      <div id="book-list"></div>
+    </section>
+
+    <!-- History tab -->
+    <section id="tab-history" class="tab">
+      <div class="card">
+        <h3>直近7日間のバランス（主菜）</h3>
+        <div id="history-balance" class="balance"></div>
+      </div>
+      <div id="history-list"></div>
+    </section>
+
+    <!-- Settings tab -->
+    <section id="tab-settings" class="tab">
+      <div class="card">
+        <h3>調理時間の上限</h3>
+        <select id="set-time">
+          <option value="10">10分以内</option>
+          <option value="15">15分以内</option>
+          <option value="20">20分以内</option>
+          <option value="30">30分以内</option>
+          <option value="45">45分以内</option>
+          <option value="60">60分以内</option>
+        </select>
+        <p class="note">検索キーワードに「時短」などを付けて寄せます。レシピ帳の調理時間が上限を超えるものは提案しません。</p>
+      </div>
+
+      <div class="card">
+        <h3>検索キーワード</h3>
+        <label class="check"><input type="checkbox" id="set-kid"> 「子供」を付ける</label>
+        <label class="check"><input type="checkbox" id="set-timeword"> 時間のワード（時短など）を付ける</label>
+        <p class="note">ヒットが少ないときはオフにしてください。</p>
+      </div>
+
+      <div class="card">
+        <h3>在庫食材</h3>
+        <p class="note">チェックした食材を使う献立を優先します。</p>
+        <div id="stock-list" class="stock-list"></div>
+        <div class="row">
+          <input type="text" id="stock-new" placeholder="食材を追加">
+          <button class="btn" id="btn-stock-add">追加</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>データのバックアップ</h3>
+        <p class="note">レシピ帳・履歴・設定はこのiPhoneの中だけに保存されます。機種変更に備えて、ときどき書き出しておくと安心です。</p>
+        <div class="row">
+          <button class="btn" id="btn-export">書き出し</button>
+          <label class="btn">読み込み<input type="file" id="import-file" accept="application/json,.json" hidden></label>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-tab="suggest" class="active"><span>🍳</span>提案</button>
+    <button data-tab="book"><span>📖</span>レシピ帳</button>
+    <button data-tab="history"><span>🗓️</span>履歴</button>
+    <button data-tab="settings"><span>⚙️</span>設定</button>
+  </nav>
+
+  <!-- Recipe book form -->
+  <dialog id="book-dialog">
+    <form id="book-form" method="dialog">
+      <h3 id="book-dialog-title">レシピを登録</h3>
+      <label>名前<input name="name" required></label>
+      <label>URL<input name="url" type="url" placeholder="https://..."></label>
+      <div class="row">
+        <label>種類
+          <select name="t">
+            <option value="main">主菜</option>
+            <option value="side">副菜</option>
+            <option value="rice">ごはん</option>
+          </select>
+        </label>
+        <label>分類<select name="g" id="book-form-group"></select></label>
+      </div>
+      <div class="row">
+        <label>調理時間(分)<input name="time" type="number" min="0" inputmode="numeric"></label>
+        <label>メルママの反応
+          <select name="reaction">
+            <option value="">未評価</option>
+            <option value="◎">◎ よく食べた</option>
+            <option value="○">○ 食べた</option>
+            <option value="△">△ いまいち</option>
+          </select>
+        </label>
+      </div>
+      <label>メモ<textarea name="memo" rows="3"></textarea></label>
+      <div class="row end">
+        <button type="button" class="btn danger" id="btn-book-delete">削除</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="btn-book-cancel">キャンセル</button>
+        <button type="submit" class="btn primary">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
