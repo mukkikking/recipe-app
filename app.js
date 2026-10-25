@@ -188,7 +188,8 @@ function scoreDish(d, ctx) {
 
   const matched = ctx.stock.filter((name) => d.ing.includes(name) || d.k.includes(name) || d.n.includes(name));
   if (matched.length) {
-    s += Math.min(matched.length, 2) * 1.5;
+    // Flat bonus: stock items overlap with Merumama's favorites (f), so keep this small.
+    s += 1;
     badges.push(`在庫: ${matched.join('・')}`);
   }
 
@@ -219,7 +220,7 @@ function scoreDish(d, ctx) {
     if ((d.g === 'fish' || d.g === 'soy') && cnt === 0) s += 1;
   }
 
-  s += Math.random() * 2.5;
+  s += Math.random() * 4;
   return { dish: d, score: s, badges };
 }
 
